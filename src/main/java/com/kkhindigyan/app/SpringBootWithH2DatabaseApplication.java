@@ -9,8 +9,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import com.kkhindigyan.app.dao.UserRepository;
 import com.kkhindigyan.app.entities.User;
+import com.kkhindigyan.app.service.UserDataAccessException;
+import com.kkhindigyan.app.service.UserService;
 
 @SpringBootApplication
 public class SpringBootWithH2DatabaseApplication {
@@ -18,13 +19,28 @@ public class SpringBootWithH2DatabaseApplication {
 	public static void main(String[] args) {
 		ConfigurableApplicationContext applicationContext = SpringApplication.run(SpringBootWithH2DatabaseApplication.class, args);
 		
-		UserRepository userRepository = applicationContext.getBean(UserRepository.class);
-		createUser(userRepository);
-		createUsers(userRepository);
+		 UserService userService = applicationContext.getBean(UserService.class);
+		//CRUD - >Create,Read,Update and Delete
+		userService.createUser(getUser());
+		userService.createUsers(getUserList());
+	
+		User user;
+		try {
+			user = userService.findUserById(null);
+			System.out.println(user);
+		} catch (UserDataAccessException e) {
+			System.out.println(e.getMessage());
+		}
 		
+		
+		userService.findAllUsers().forEach(System.out::println);
+		
+		userService.updateUserAgeById(1,45);
+		
+		userService.deleteUserById(3);
 	}
-
-	private static void createUsers(UserRepository userRepository) {
+	
+	private static List<User> getUserList(){
 		User user1 = new User();
 		user1.setName("Sudha Verma");
 		user1.setAge(31);
@@ -38,18 +54,14 @@ public class SpringBootWithH2DatabaseApplication {
 		List<User> userList = new ArrayList<>();
 		userList.add(user1);
 		userList.add(user2);
-		Iterable<User> dbSavedUsers = userRepository.saveAll(userList);
-		System.out.println("Following users info saved in database:");
-		dbSavedUsers.forEach(System.out::println);
+		return userList;
 	}
-
-	private static void createUser(UserRepository userRepository) {
+	
+	private static User getUser() {
 		User user = new User();
 		user.setName("Sean Murphy");
 		user.setAge(30);
 		user.setDob(LocalDate.of(1998, Month.MARCH, 20));
-		User dbUser = userRepository.save(user);
-		System.out.println("Following user info saved in database:");
-		System.out.println(dbUser);
+		return user;
 	}
 }
